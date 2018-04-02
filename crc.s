@@ -1,5 +1,5 @@
 main:
-	movia r3, 3254779904
+	movia r3, 0b11000010000000000000000000000000
 	
 	movi r4, 32 #Qtd de vezes que o loop deve ser realizado
 	movi r5, 0 #Contador
