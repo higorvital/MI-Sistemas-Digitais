@@ -1,5 +1,5 @@
 main:
-	movia r2, 0x00030000
+	movia r2, 0x00000810
 	
 	movi r3, 5
 	
