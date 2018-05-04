@@ -4,8 +4,8 @@
 	.text
 main:
 	movia r13, valor
-	ldw r3, 0(r13) #Registrador onde ser· feito o calculo
-	ldw r5, 4(r13) #Registrador onde ser· feito o calculo
+	ldw r3, 0(r13) #Registrador onde ser√° feito o calculo
+	ldw r5, 4(r13) #Registrador onde ser√° feito o calculo
 
 	movi r8, 250 #Quantidade de registradores
 	movi r14, 1
@@ -32,7 +32,7 @@ resetar:
 	beq r8, r0, led #Se n tem mais registradores, para
 	beq r8, r14, volta1
 	addi r13, r13, 4
-	ldw r5, 4(r13) #Registrador onde ser· feito o calculo
+	ldw r5, 4(r13) #Registrador onde ser√° feito o calculo
 	br volta1
 calculo:
 	slli r3, r3, 1 #Desloca um bit	registrador principal
@@ -44,8 +44,8 @@ calculo:
 	br volta3
 led:
 		
-	movia r9, 0x00000840
-	movia r10, 0x00000810
+	movia r9, 0x00002030
+	movia r10, 0x00002020
 	
 	movi r4, 8
 	
