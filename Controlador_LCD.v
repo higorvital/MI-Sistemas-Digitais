@@ -59,7 +59,7 @@ module	Controlador_LCD(
 
 	assign LCD_DATA = data_out;
 
-	int = 0;
+	int i = 0;
 
 	wire [7:0] foo [0:15];
 	wire [7:0] foo2 [0:4];
