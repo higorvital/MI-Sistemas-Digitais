@@ -29,6 +29,7 @@ module	Controlador_LCD(
 
 	reg [7:0] data_out;
 	reg [7:0] state;
+	reg [7:0] next;
 
 
 	parameter [7:0] I0 = 8'h00,
@@ -51,6 +52,8 @@ module	Controlador_LCD(
 	 				T0 = 8'h12,
 	 				T1 = 8'h13,
 	 				T2 = 8'h14,
+	 				CURSOR = 8'hfd,
+	 				ESPACO = 8'hfe,
 	 				FIM = 8'hff;
 
 	initial begin
@@ -195,7 +198,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=D1;
+						next<=D1;
+						state <=CURSOR;
 					end
 			D1:		i = 4;		
 					begin
@@ -237,7 +241,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=D2;
+						next<=D2;
+						state <=CURSOR;
 					end
 			D2:		i = 8;		
 					begin
@@ -279,7 +284,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=D3;
+						next<=D3;
+						state <=CURSOR;
 					end
 			D3:		i = 12;		
 					begin
@@ -321,7 +327,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=D4;
+						next<=D4;
+						state <=CURSOR;
 					end
 			D4:		i = 16;		
 					begin
@@ -363,7 +370,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=D5;
+						next<=D5;
+						state <=CURSOR;
 					end
 			D5:		i = 20;		
 					begin
@@ -405,7 +413,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=D6;
+						next<=D6;
+						state <=CURSOR;
 					end
 			D6:		i = 24;		
 					begin
@@ -447,7 +456,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=D7;
+						next<=D7;
+						state <=CURSOR;
 					end
 			D7:		i = 28;		
 					begin
@@ -489,7 +499,8 @@ module	Controlador_LCD(
 							data_out <=foo[15];
 						end 
 						#53000;
-						state <=T0;
+						next<=ESPACO;
+						state <=CURSOR;
 					end
 			T0:     
 					begin
@@ -498,7 +509,8 @@ module	Controlador_LCD(
 						LCD_RW1 = 1'b0;
 						data_out <= foo[0];
 						#53000;
-						state <=T1;
+						next<=T1;
+						state <=CURSOR;
 
 					end
 			T1:     
@@ -508,7 +520,8 @@ module	Controlador_LCD(
 						LCD_RW1 = 1'b0;
 						data_out <= foo[1];
 						#53000;
-						state <=T2;
+						next<=T2;
+						state <=CURSOR;
 
 					end
 			T2:     
@@ -526,6 +539,24 @@ module	Controlador_LCD(
 						#53000;
 						state <=FIM;
 					end
+			CURSOR: 					
+					begin
+						LCD_RS1 = 1'b0;
+						LCD_EN1 = 1'b1;
+						LCD_RW1 = 1'b0;
+					
+						data_out <= 8'b000101xx;
+					
+						#53000;
+						state <=next;
+					end
+
+			ESPACO: 
+					begin					
+						next <= T0;
+						state <=CURSOR;
+					end
+
 			FIM:
 
 
