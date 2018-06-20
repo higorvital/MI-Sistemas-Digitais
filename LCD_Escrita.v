@@ -54,11 +54,13 @@ module	LCD_Inicializacao(
 	end
 
 	always @(posedge Clock)
-		state <= next;
 		if(init) begin
 			state<=D0;
 			init <= 1'b0;
+		end else begin
+			state <= next;
 		end
+
 
 	assign LCD_DATA = data_out;
 
