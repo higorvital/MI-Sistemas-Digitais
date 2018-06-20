@@ -498,6 +498,8 @@ module	LCD_Inicializacao(
 					LCD_RS1 = 1'b0;
 					LCD_RW1 = 1'b0;
 					data_out <= foo2[4];
+					LCD_EN1 = 1'b1;
+					LCD_EN1 = 1'b0;
 					next <=T0;
 				end
 			FIM:
