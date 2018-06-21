@@ -1,4 +1,3 @@
-
 module	Rx(
 			//------------------------------------------------------------------
 			//	Clock & Reset Inputs
@@ -25,6 +24,9 @@ module	Rx(
 	reg data_in1;
 	reg [15:0] qtd_pacotes;
 	reg [1:0] init = 2'b00;
+	reg start = 0;
+	reg [3:0] paridade;
+	reg erro_paridade;
 
 	assign DATA_IN = data_in1;
 
@@ -48,6 +50,7 @@ module	Rx(
 	initial begin
 		contador <= 16'b0;
 		state=>START;
+		next => START;
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 50000000/4800;
 		end else if(modos_de_operacao[7:6]==2'b01) begin
@@ -63,24 +66,27 @@ module	Rx(
 	assign LCD_DATA = data_out;
 
 	always @(posedge Clock) begin
-		state <= next;
-		if(contador==velocidade) begin
-			contador = 0;
-		end else begin
-			contador <= contador + 1;
+		if(start) begin
+			state <= next;
+			if(contador==velocidade) begin
+				contador = 0;
+			end else begin
+				contador <= contador + 1;
+			end
+		end else
+			contador <=0;
 		end
 	end
 
-	wire serclock = (contador == 0);
+	wire serclock = (contador == velocidade);
 
 	always @(posedge Clock)
 		case(state)
 			START:	
 				begin
-					if(serclock) begin
-						if(data_in1==1'b0) begin
-							next <= D0;
-						end
+					if(data_in1==1'b0) begin
+						next <= D0;
+						start <= 1'b1;
 					end
 				end
 			D0:		
@@ -92,6 +98,9 @@ module	Rx(
 							qtd_pacotes[8] <= data_in1;
 						end else begin
 							data_out1[0] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
 						end
 						next <=D1;
 					end
@@ -105,6 +114,9 @@ module	Rx(
 							qtd_pacotes[9] <= data_in1;						
 						end else begin
 							data_out1[1] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
 						end
 						next <=D2;
 					end
@@ -118,6 +130,9 @@ module	Rx(
 							qtd_pacotes[10] <= data_in1;						
 						end else begin
 							data_out1[2] <= data_in1;
+							if(data_in1==1) begin
+								paridade <= paridade + 1;
+							end
 						end
 						next <=D3;
 					end
@@ -131,6 +146,9 @@ module	Rx(
 							qtd_pacotes[11] <= data_in1;						
 						end else begin
 							data_out1[3] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
 						end
 						next <=D4;
 					end
@@ -146,6 +164,9 @@ module	Rx(
 							next <=D5;
 						end else begin
 							data_out1[4] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
 
 							if(modos_de_operacao[3:2]==2'b00) begin
 								data_out1[5] <= 1'b0;
@@ -173,6 +194,9 @@ module	Rx(
 							next <=D6;
 						end else begin
 							data_out1[5] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
 							
 							if(modos_de_operacao[3:2]==2'b01) begin
 								data_out1[6] <= 1'b0;
@@ -199,6 +223,9 @@ module	Rx(
 							next <=D7;
 						end else begin
 							data_out1[6] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
 							
 							if(modos_de_operacao[3:2]==2'b10) begin
 								data_out1[7] <= 1'b0;
@@ -223,7 +250,10 @@ module	Rx(
 							qtd_pacotes[15] <= data_in1;
 							init <= 2'b10;
 						end else begin
-							data_out1[7] <= data_in1;	
+							data_out1[7] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end	
 						end
 						
 						if(modos_de_operacao[0]==1'b0) begin
@@ -234,6 +264,20 @@ module	Rx(
 					end
 				end
 			PARIDADE:	
+				if(serclock) begin
+					if(data_in1==1) being
+						paridade <= paridade + 1;
+					end
+
+					if(modos_de_operacao[1]==0  && (paridade==0 || paridade==2 || paridade==4 || paridade==6 || paridade==8)) begin
+						erro_paridade = 0;
+					end else if(modos_de_operacao[1]==0  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
+						erro_paridade = 0;
+					end else begin
+						erro_paridade = 1;
+					end
+					next <= STOPBIT1;
+				end
 
 			STOPBIT1:		
 				begin
@@ -243,6 +287,7 @@ module	Rx(
 						end else begin
 							//mandar os 8 bits pra memoria
 							next <= START;
+							start <= 0;
 							if(init[1:0]==2'b10) begin
 								init <= 2'b11;
 							end else if(init[1:0]==2'b11) begin
@@ -259,6 +304,7 @@ module	Rx(
 					if(serclock) begin
 						//mandar os 8 bits pra memoria
 						next<=START;
+						start <= 0;
 						if(init[1:0]==2'b10) begin
 							init <= 2'b11;
 						end else if(init[1:0]==2'b11) begin
