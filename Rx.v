@@ -34,14 +34,14 @@ module	Rx(
 	reg [15:0] contador;
 
 	parameter [7:0] START = 8'h00,
-					D0 = 8'h01,
-	 				D1 = 8'h02,
-	 				D2 = 8'h03,
-	 				D3 = 8'h04,
-	 				D4 = 8'h05,
-	 				D5 = 8'h06,
-	 				D6 = 8'h07,
-	 				D7 = 8'h08,
+					D7 = 8'h01,
+	 				D6 = 8'h02,
+	 				D5 = 8'h03,
+	 				D4 = 8'h04,
+	 				D3 = 8'h05,
+	 				D2 = 8'h06,
+	 				D1 = 8'h07,
+	 				D0 = 8'h08,
 	 				PARIDADE = 8'h09,
 	 				STOPBIT1 = 8'h0a,
 	 				STOPTBIT2 = 8'h0b,
@@ -52,13 +52,13 @@ module	Rx(
 		state=>START;
 		next => START;
 		if(modos_de_operacao[7:6]==2'b00) begin
-			velocidade = 50000000/4800;
+			velocidade = 10416;
 		end else if(modos_de_operacao[7:6]==2'b01) begin
-			velocidade = 50000000/9600;
+			velocidade = 5208;
 		end else if(modos_de_operacao[7:6]==2'b10) begin
-			velocidade = 50000000/19200;
+			velocidade = 2604;
 		end else if(modos_de_operacao[7:6]==2'b11) begin
-			velocidade = 50000000/57600;
+			velocidade = 868;
 		end 
 	end
 
@@ -85,102 +85,40 @@ module	Rx(
 			START:	
 				begin
 					if(data_in1==1'b0) begin
-						next <= D0;
+						next <= D7;
 						start <= 1'b1;
 					end
 				end
-			D0:		
+			D7:		
 				begin	
 					if(serclock) begin
 						if(init[1:0]==2'b00) begin
-							qtd_pacotes[0] <= data_in1;
+							qtd_pacotes[7] <= data_in1;
 						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[8] <= data_in1;
+							qtd_pacotes[15] <= data_in1;
 						end else begin
-							data_out1[0] <= data_in1;
+							data_out1[7] <= data_in1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
 						end
-						next <=D1;
+						next <=D6;
 					end
 				end
-			D1:		
+			D6:		
 				begin	
 					if(serclock) begin
 						if(init[1:0]==2'b00) begin
-							qtd_pacotes[1] <= data_in1;
+							qtd_pacotes[6] <= data_in1;
 						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[9] <= data_in1;						
+							qtd_pacotes[14] <= data_in1;						
 						end else begin
-							data_out1[1] <= data_in1;
+							data_out1[6] <= data_in1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
 						end
-						next <=D2;
-					end
-				end
-			D2:		
-				begin
-					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[2] <= data_in1;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[10] <= data_in1;						
-						end else begin
-							data_out1[2] <= data_in1;
-							if(data_in1==1) begin
-								paridade <= paridade + 1;
-							end
-						end
-						next <=D3;
-					end
-				end
-			D3:		
-				begin	
-					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[3] <= data_in1;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[11] <= data_in1;						
-						end else begin
-							data_out1[3] <= data_in1;
-							if(modos_de_operacao[0]==1 && data_in1==1) begin
-								paridade <= paridade + 1;
-							end
-						end
-						next <=D4;
-					end
-				end
-			D4:		
-				begin
-					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[4] <= data_in1;
-							next <=D5;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[12] <= data_in1;						
-							next <=D5;
-						end else begin
-							data_out1[4] <= data_in1;
-							if(modos_de_operacao[0]==1 && data_in1==1) begin
-								paridade <= paridade + 1;
-							end
-
-							if(modos_de_operacao[3:2]==2'b00) begin
-								data_out1[5] <= 1'b0;
-								data_out1[6] <= 1'b0;
-								data_out1[7] <= 1'b0;
-								if(modos_de_operacao[0]==1'b0) begin
-									next <=STOPBIT1;
-								end else begin
-									next <=PARIDADE;
-								end
-							end else begin
-								next <= D5;
-							end
-						end
+						next <=D5;
 					end
 				end
 			D5:		
@@ -188,69 +126,131 @@ module	Rx(
 					if(serclock) begin
 						if(init[1:0]==2'b00) begin
 							qtd_pacotes[5] <= data_in1;
-							next <=D6;
 						end else if(init[1:0]==2'b01) begin
 							qtd_pacotes[13] <= data_in1;						
-							next <=D6;
 						end else begin
 							data_out1[5] <= data_in1;
+							if(data_in1==1) begin
+								paridade <= paridade + 1;
+							end
+						end
+						next <=D4;
+					end
+				end
+			D4:		
+				begin	
+					if(serclock) begin
+						if(init[1:0]==2'b00) begin
+							qtd_pacotes[4] <= data_in1;
+						end else if(init[1:0]==2'b01) begin
+							qtd_pacotes[12] <= data_in1;						
+						end else begin
+							data_out1[4] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
+						end
+						next <=D3;
+					end
+				end
+			D3:		
+				begin
+					if(serclock) begin
+						if(init[1:0]==2'b00) begin
+							qtd_pacotes[3] <= data_in1;
+							next <=D2;
+						end else if(init[1:0]==2'b01) begin
+							qtd_pacotes[11] <= data_in1;						
+							next <=D2;
+						end else begin
+							data_out1[3] <= data_in1;
+							if(modos_de_operacao[0]==1 && data_in1==1) begin
+								paridade <= paridade + 1;
+							end
+
+							if(modos_de_operacao[3:2]==2'b00) begin
+								data_out1[2] <= 1'b0;
+								data_out1[1] <= 1'b0;
+								data_out1[0] <= 1'b0;
+								if(modos_de_operacao[0]==1'b0) begin
+									next <=STOPBIT1;
+								end else begin
+									next <=PARIDADE;
+								end
+							end else begin
+								next <= D2;
+							end
+						end
+					end
+				end
+			D2:		
+				begin
+					if(serclock) begin
+						if(init[1:0]==2'b00) begin
+							qtd_pacotes[2] <= data_in1;
+							next <=D1;
+						end else if(init[1:0]==2'b01) begin
+							qtd_pacotes[10] <= data_in1;						
+							next <=D1;
+						end else begin
+							data_out1[2] <= data_in1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
 							
 							if(modos_de_operacao[3:2]==2'b01) begin
-								data_out1[6] <= 1'b0;
-								data_out1[7] <= 1'b0;
+								data_out1[1] <= 1'b0;
+								data_out1[0] <= 1'b0;
 								if(modos_de_operacao[0]==1'b0) begin
 									next <=STOPBIT1;
 								end else begin
 									next <=PARIDADE;
 								end
 							end else begin
-								next <= D6;
+								next <= D1;
 							end
 						end
 					end
 				end
-			D6:		
+			D1:		
 				begin
 					if(serclock) begin
 						if(init[1:0]==2'b00) begin
-							qtd_pacotes[6] <= data_in1;
-							next <=D7;
+							qtd_pacotes[1] <= data_in1;
+							next <=D0;
 						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[14] <= data_in1;						
-							next <=D7;
+							qtd_pacotes[9] <= data_in1;						
+							next <=D0;
 						end else begin
-							data_out1[6] <= data_in1;
+							data_out1[1] <= data_in1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
 							
 							if(modos_de_operacao[3:2]==2'b10) begin
-								data_out1[7] <= 1'b0;
+								data_out1[0] <= 1'b0;
 								if(modos_de_operacao[0]==1'b0) begin
 									next <=STOPBIT1;
 								end else begin
 									next <=PARIDADE;
 								end
 							end else begin
-								next <= D7;
+								next <= D0;
 							end
 						end
 					end
 				end
-			D7:	
+			D0:	
 				begin	
 					if(serclock) begin
 						if(init[1:0]==2'b00) begin
-							qtd_pacotes[7] <= data_in1;
+							qtd_pacotes[0] <= data_in1;
 							init <= 2'b01;
 						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[15] <= data_in1;
+							qtd_pacotes[8] <= data_in1;
 							init <= 2'b10;
 						end else begin
-							data_out1[7] <= data_in1;
+							data_out1[0] <= data_in1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end	
