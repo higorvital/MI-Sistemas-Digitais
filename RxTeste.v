@@ -12,23 +12,23 @@ module	RxTeste(
 
 	input 			Clock;
 	input           DATA_IN;
+	input 	         CTS;
+
 	output	[7:0]		DATA_OUT;
-	input          CTS;
-	output           RTS;
+	output  	        RTS;
 
 	parameter [7:0] modos_de_operacao = 8'b10110101;
 
+	reg start = 0;
+	reg data_in1;
+	reg erro_paridade;
+	reg [3:0] paridade;
 	reg [7:0] data_out1;
 	reg [7:0] state;
 	reg [7:0] next;
-	reg data_in1;
-	reg [15:0] qtd_pacotes;
-	reg [1:0] init = 2'b00;
-	reg start = 0;
-	reg [3:0] paridade;
-	reg erro_paridade;
 
 	assign DATA_IN = data_in1;
+	assign DATA_OUT = data_out1;
 
 	reg [15:0] velocidade;
 	reg [15:0] contador;
@@ -49,7 +49,7 @@ module	RxTeste(
 
 	initial begin
 		contador <= 16'b0;
-		state=>START;
+		state => START;
 		next => START;
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 10416;
@@ -61,9 +61,6 @@ module	RxTeste(
 			velocidade = 868;
 		end 
 	end
-
-
-	assign LCD_DATA = data_out;
 
 	always @(posedge Clock) begin
 		if(start) begin
@@ -182,7 +179,7 @@ module	RxTeste(
 
 					if(modos_de_operacao[1]==0  && (paridade==0 || paridade==2 || paridade==4 || paridade==6 || paridade==8)) begin
 						erro_paridade = 0;
-					end else if(modos_de_operacao[1]==0  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
+					end else if(modos_de_operacao[1]==1  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
 						erro_paridade = 0;
 					end else begin
 						erro_paridade = 1;
