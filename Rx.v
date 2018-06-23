@@ -4,34 +4,46 @@ module	Rx(
 			//------------------------------------------------------------------
 			Clock,
 			DATA_IN,
-			DATA_OUT,
 			CTS,
+			DATA_OUT,
 			RTS
 	);
 
 
 	input 			Clock;
 	input           DATA_IN;
+	input          	CTS;
+
 	output	[7:0]		DATA_OUT;
-	input          CTS;
-	output           RTS;
+	output           	RTS;
 
 	parameter [7:0] modos_de_operacao = 8'b00000000;
 
+	reg data_in1;
+	reg erro_paridade;
+	reg enable = 1'b0;
+
+	reg [2:0] estagio = 3'b000;
+
+	reg [3:0] paridade;
+
 	reg [7:0] data_out1;
+	reg [15:0] qtd_pacotes;
+	reg [31:0] crc;
+
 	reg [7:0] state;
 	reg [7:0] next;
-	reg data_in1;
-	reg [15:0] qtd_pacotes;
-	reg [1:0] init = 2'b00;
-	reg start = 0;
-	reg [3:0] paridade;
-	reg erro_paridade;
-
-	assign DATA_IN = data_in1;
-
 	reg [15:0] velocidade;
 	reg [15:0] contador;
+
+	reg [3:0] vetor_dados = 4'b111;
+	reg [4:0] vetor_pacotes = 5'b1111;
+	reg [5:0] vetor_crc = 6'b11111;
+
+	wire serclock = (contador == velocidade);
+
+	assign DATA_IN = data_in1;
+	assign DATA_OUT = data_ou1;
 
 	parameter [7:0] START = 8'h00,
 					D7 = 8'h01,
@@ -49,7 +61,7 @@ module	Rx(
 
 	initial begin
 		contador <= 16'b0;
-		state=>START;
+		state => START;
 		next => START;
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 10416;
@@ -63,22 +75,19 @@ module	Rx(
 	end
 
 
-	assign LCD_DATA = data_out;
-
 	always @(posedge Clock) begin
-		if(start) begin
+		if(enable) begin
 			state <= next;
 			if(contador==velocidade) begin
 				contador = 0;
 			end else begin
 				contador <= contador + 1;
 			end
-		end else
+		end else begin
+			state <=next;
 			contador <=0;
 		end
 	end
-
-	wire serclock = (contador == velocidade);
 
 	always @(posedge Clock)
 		case(state)
@@ -86,18 +95,21 @@ module	Rx(
 				begin
 					if(data_in1==1'b0) begin
 						next <= D7;
-						start <= 1'b1;
+						enable <= 1;
 					end
 				end
 			D7:		
 				begin	
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[7] <= data_in1;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[15] <= data_in1;
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							vetor_crc <= vetor_crc - 1;
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+							vetor_pacotes <= vetor_pacotes - 1;
 						end else begin
-							data_out1[7] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados <= vetor_dados - 1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
@@ -108,12 +120,15 @@ module	Rx(
 			D6:		
 				begin	
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[6] <= data_in1;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[14] <= data_in1;						
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							vetor_crc <= vetor_crc - 1;
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+							vetor_pacotes <= vetor_pacotes - 1;
 						end else begin
-							data_out1[6] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados <= vetor_dados - 1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
@@ -124,12 +139,15 @@ module	Rx(
 			D5:		
 				begin
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[5] <= data_in1;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[13] <= data_in1;						
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							vetor_crc <= vetor_crc - 1;
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+							vetor_pacotes <= vetor_pacotes - 1;
 						end else begin
-							data_out1[5] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados <= vetor_dados - 1;
 							if(data_in1==1) begin
 								paridade <= paridade + 1;
 							end
@@ -140,12 +158,15 @@ module	Rx(
 			D4:		
 				begin	
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[4] <= data_in1;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[12] <= data_in1;						
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							vetor_crc <= vetor_crc - 1;
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+							vetor_pacotes <= vetor_pacotes - 1;
 						end else begin
-							data_out1[4] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados <= vetor_dados - 1;
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
@@ -156,14 +177,16 @@ module	Rx(
 			D3:		
 				begin
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[3] <= data_in1;
-							next <=D2;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[11] <= data_in1;						
-							next <=D2;
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							vetor_crc <= vetor_crc - 1;
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+							vetor_pacotes <= vetor_pacotes - 1;
 						end else begin
-							data_out1[3] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados <= vetor_dados - 1;
+
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
@@ -186,14 +209,16 @@ module	Rx(
 			D2:		
 				begin
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[2] <= data_in1;
-							next <=D1;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[10] <= data_in1;						
-							next <=D1;
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							vetor_crc <= vetor_crc - 1;
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+							vetor_pacotes <= vetor_pacotes - 1;
 						end else begin
-							data_out1[2] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados <= vetor_dados - 1;
+
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
@@ -215,14 +240,16 @@ module	Rx(
 			D1:		
 				begin
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[1] <= data_in1;
-							next <=D0;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[9] <= data_in1;						
-							next <=D0;
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							vetor_crc <= vetor_crc - 1;
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+							vetor_pacotes <= vetor_pacotes - 1;
 						end else begin
-							data_out1[1] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados <= vetor_dados - 1;
+
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end
@@ -243,14 +270,26 @@ module	Rx(
 			D0:	
 				begin	
 					if(serclock) begin
-						if(init[1:0]==2'b00) begin
-							qtd_pacotes[0] <= data_in1;
-							init <= 2'b01;
-						end else if(init[1:0]==2'b01) begin
-							qtd_pacotes[8] <= data_in1;
-							init <= 2'b10;
+						if(estagio[2:0]==3'b000) begin
+							crc[vetor_crc] <= data_in1;
+							
+							if(vetor_crc == 0) begin
+								estagio[2:0] <= 3'h001;
+							end else begin
+								vetor_crc <= vetor_crc - 1;
+							end
+						end else if(estagio[2:0]==3'b001) begin
+							qtd_pacotes[vetor_pacotes] <= data_in1;
+
+							if(vetor_pacotes == 0) begin
+								estagio[2:0] <= 3'b010;
+							end else begin
+								vetor_pacotes <= vetor_pacotes - 1;
+							end
 						end else begin
-							data_out1[0] <= data_in1;
+							data_out1[vetor_dados] <= data_in1;
+							vetor_dados[3:0] <= 3'h7;
+
 							if(modos_de_operacao[0]==1 && data_in1==1) begin
 								paridade <= paridade + 1;
 							end	
@@ -271,15 +310,18 @@ module	Rx(
 
 					if(modos_de_operacao[1]==0  && (paridade==0 || paridade==2 || paridade==4 || paridade==6 || paridade==8)) begin
 						erro_paridade = 0;
-					end else if(modos_de_operacao[1]==0  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
+					end else if(modos_de_operacao[1]==1  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
 						erro_paridade = 0;
 					end else begin
 						erro_paridade = 1;
 					end
+
+					paridade <= 0;
+
 					next <= STOPBIT1;
 				end
 
-			STOPBIT1:		
+			STOPBIT1:
 				begin
 					if(serclock) begin
 						if(modos_de_operacao[5]==1'b0) begin
@@ -287,12 +329,12 @@ module	Rx(
 						end else begin
 							//mandar os 8 bits pra memoria
 							next <= START;
-							start <= 0;
-							if(init[1:0]==2'b10) begin
-								init <= 2'b11;
-							end else if(init[1:0]==2'b11) begin
+							enable <= 0;
+							if(estagio[2:0]==3'b010) begin
+								estagio <= 3'b011;
+							end else if(estagio[2:0]==3'b011) begin
 								qtd_pacotes <= qtd_pacotes - 1;
-								if(qtd_pacotes==8'b0) begin
+								if(qtd_pacotes==16'b0) begin
 									next <= FIM;
 								end
 							end
@@ -304,12 +346,12 @@ module	Rx(
 					if(serclock) begin
 						//mandar os 8 bits pra memoria
 						next<=START;
-						start <= 0;
-						if(init[1:0]==2'b10) begin
-							init <= 2'b11;
-						end else if(init[1:0]==2'b11) begin
+						enable <= 0;
+						if(estagio[2:0]==3'b010) begin
+							estagio <= 3'b011;
+						end else if(estagio[2:0]==3'b011) begin
 							qtd_pacotes <= qtd_pacotes - 1;
-							if(qtd_pacotes==8'b0) begin
+							if(qtd_pacotes==16'b0) begin
 								next <= FIM;
 							end
 						end
