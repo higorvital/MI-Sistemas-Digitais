@@ -1,24 +1,23 @@
-
 module	LCD_Inicializacao(
 			//------------------------------------------------------------------
 			//	Clock & Reset Inputs
 			//------------------------------------------------------------------
 			Clock,
+			LCD_BLINK,
+			LCD_INCREMENTO,
 			LCD_RS,
 			LCD_EN,
 			LCD_RW,
-			LCD_BLINK,
-			LCD_INCREMENTO,
 			LCD_DATA
 	);
 
 	input Clock;
-	input			LCD_RS;
-	input			LCD_EN;
-	input			LCD_RW;
 	input			LCD_BLINK;
 	input			LCD_INCREMENTO;
 
+	output			LCD_RS;
+	output			LCD_EN;
+	output			LCD_RW;
 	output	[7:0]		LCD_DATA;
 
 	reg			LCD_RS1;
@@ -27,17 +26,20 @@ module	LCD_Inicializacao(
 	reg			blink;
 	reg			incremento;
 
+	reg 		init = 1'b1;
+
+	reg [7:0] data_out;
+	reg [7:0] state;
+	reg [7:0] next;
+	reg [7:0] next1;
+
 	assign LCD_BLINK = blink;
 	assign LCD_INCREMENTO = incremento;
 
 	assign LCD_RS = LCD_RS1;
 	assign LCD_EN = LCD_EN1;
 	assign LCD_RW = LCD_RW1;
-
-	reg [7:0] data_out;
-	reg [7:0] state;
-	reg [7:0] next;
-	reg [7:0] next1;
+	assign LCD_DATA = data_out;
 
 
 	parameter [7:0] I0 = 8'h00,
@@ -46,7 +48,6 @@ module	LCD_Inicializacao(
 	 				I3 = 8'h03,
 	 				I4 = 8'h04,
 	 				FIM = 8'hff;
-	reg init = 1'b1;
 
 	initial begin
 		init = 1;
@@ -63,9 +64,7 @@ module	LCD_Inicializacao(
 		end
 
 
-	assign LCD_DATA = data_out;
-
-	always @(state)
+	always @(posedge Clock or state)
 		case(state)
 			I0:	
 				begin
