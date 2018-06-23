@@ -1,4 +1,3 @@
-
 module	LCD_Inicializacao(
 			//------------------------------------------------------------------
 			//	Clock & Reset Inputs
@@ -27,6 +26,8 @@ module	LCD_Inicializacao(
 	assign LCD_RS = LCD_RS1;
 	assign LCD_EN = LCD_EN1;
 	assign LCD_RW = LCD_RW1;
+	assign LCD_DATA = data_out;
+
 
 	reg [7:0] data_out;
 	reg [7:0] state;
@@ -46,6 +47,7 @@ module	LCD_Inicializacao(
 	 				T2 = 8'h14,
 	 				ESPACO = 8'hfe,
 	 				FIM = 8'hff;
+	 				
 	reg init = 1'b1;
 	reg [4:0] i = 5'b0;
 
@@ -61,8 +63,6 @@ module	LCD_Inicializacao(
 			state <= next;
 		end
 
-
-	assign LCD_DATA = data_out;
 
 
 	wire [7:0] foo [0:15];
