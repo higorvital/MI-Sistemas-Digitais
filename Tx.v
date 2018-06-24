@@ -22,6 +22,7 @@ module	Tx(
 	reg start;
 	reg erro_paridade;
 	reg data_out1;
+	reg rts;
 	reg enable = 1'b0;
 	reg [3:0] paridade;
 	reg [7:0] data = 8'h1;
@@ -31,6 +32,7 @@ module	Tx(
 
 	assign DATA_OUT = data_out1;
 	assign START = start;
+	assign RTS = rts;
 
 	reg [15:0] velocidade;
 	reg [15:0] contador;
@@ -53,6 +55,7 @@ module	Tx(
 		contador <= 16'b0;
 		state => START;
 		next => START;
+		rts <=1;
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 10416;
 		end else if(modos_de_operacao[7:6]==2'b01) begin
@@ -84,7 +87,7 @@ module	Tx(
 
 	wire serclock = (contador == velocidade);
 
-	always @(posedge Clock)
+	always @(posedge Clock and posedge cts)
 		case(state)
 			START:	
 				begin
@@ -229,6 +232,9 @@ module	Tx(
 					end
 				end
 			FIM:
+				begin
+					rts <=0;
+				end
 
 endmodule
 //------------------------------------------------------------------------------
