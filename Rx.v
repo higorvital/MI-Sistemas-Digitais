@@ -4,23 +4,27 @@ module	Rx(
 			//------------------------------------------------------------------
 			Clock,
 			DATA_IN,
-			CTS,
+			RTS,
 			DATA_OUT,
-			RTS
+			CTS,
+			ERROPARIDADE
 	);
 
 
 	input 			Clock;
 	input           DATA_IN;
-	input          	CTS;
+	input          	RTS;
 
 	output	[7:0]		DATA_OUT;
-	output           	RTS;
+	output           	CTS;
+	output 				ERROPARIDADE;
 
 	parameter [7:0] modos_de_operacao = 8'b00000000;
 
 	reg data_in1;
 	reg erro_paridade;
+	reg cts;
+	reg rts;
 	reg enable = 1'b0;
 
 	reg [2:0] estagio = 3'b000;
@@ -44,6 +48,8 @@ module	Rx(
 
 	assign DATA_IN = data_in1;
 	assign DATA_OUT = data_ou1;
+	assign CTS = cts;
+	assign ERROPARIDADE = erro_paridade;
 
 	parameter [7:0] START = 8'h00,
 					D7 = 8'h01,
@@ -63,6 +69,7 @@ module	Rx(
 		contador <= 16'b0;
 		state => START;
 		next => START;
+		cts <= 1;
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 10416;
 		end else if(modos_de_operacao[7:6]==2'b01) begin
@@ -89,7 +96,7 @@ module	Rx(
 		end
 	end
 
-	always @(posedge Clock)
+	always @(posedge Clock and posedge rts)
 		case(state)
 			START:	
 				begin
@@ -308,12 +315,10 @@ module	Rx(
 						paridade <= paridade + 1;
 					end
 
-					if(modos_de_operacao[1]==0  && (paridade==0 || paridade==2 || paridade==4 || paridade==6 || paridade==8)) begin
-						erro_paridade = 0;
-					end else if(modos_de_operacao[1]==1  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
-						erro_paridade = 0;
-					end else begin
-						erro_paridade = 1;
+					if(modos_de_operacao[1]==1  && (paridade==0 || paridade==2 || paridade==4 || paridade==6 || paridade==8)) begin
+						erro_paridade <= 1;
+					end else if(modos_de_operacao[1]==0  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
+						erro_paridade <= 1;
 					end
 
 					paridade <= 0;
@@ -342,7 +347,7 @@ module	Rx(
 					end
 				end
 			STOPBIT2:
-				begin			
+				begin
 					if(serclock) begin
 						//mandar os 8 bits pra memoria
 						next<=START;
@@ -358,6 +363,9 @@ module	Rx(
 					end
 				end
 			FIM:
+				begin
+					cts <=0;
+				end
 				//colocar algo na memoria pro crc começar
 
 endmodule
