@@ -4,23 +4,26 @@ module	RxTeste(
 			//------------------------------------------------------------------
 			Clock,
 			DATA_IN,
+			RTS,
 			DATA_OUT,
 			CTS,
-			RTS
+			ERROPARIDADE
 	);
 
 
 	input 			Clock;
 	input           DATA_IN;
-	input 	         CTS;
+	input 	         RTS;
 
 	output	[7:0]		DATA_OUT;
-	output  	        RTS;
+	output  	        CTS;
+	output 				ERROPARIDADE;
 
 	parameter [7:0] modos_de_operacao = 8'b10110101;
 
 	reg start = 0;
 	reg data_in1;
+	reg cts;
 	reg erro_paridade;
 	reg [3:0] paridade;
 	reg [7:0] data_out1;
@@ -29,6 +32,8 @@ module	RxTeste(
 
 	assign DATA_IN = data_in1;
 	assign DATA_OUT = data_out1;
+	assign ERROPARIDADE = erro_paridade;
+	assign CTS = cts;
 
 	reg [15:0] velocidade;
 	reg [15:0] contador;
@@ -51,6 +56,7 @@ module	RxTeste(
 		contador <= 16'b0;
 		state => START;
 		next => START;
+		cts <=1;
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 10416;
 		end else if(modos_de_operacao[7:6]==2'b01) begin
@@ -177,12 +183,10 @@ module	RxTeste(
 						paridade <= paridade + 1;
 					end
 
-					if(modos_de_operacao[1]==0  && (paridade==0 || paridade==2 || paridade==4 || paridade==6 || paridade==8)) begin
-						erro_paridade = 0;
-					end else if(modos_de_operacao[1]==1  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
-						erro_paridade = 0;
-					end else begin
-						erro_paridade = 1;
+					if(modos_de_operacao[1]==1  && (paridade==0 || paridade==2 || paridade==4 || paridade==6 || paridade==8)) begin
+						erro_paridade <= 1;
+					end else if(modos_de_operacao[1]==0  && (paridade==1 || paridade==3 || paridade==5 || paridade==7 || paridade==9)) begin
+						erro_paridade <= 1;
 					end
 					next <= STOPBIT1;
 				end
@@ -204,6 +208,9 @@ module	RxTeste(
 					end
 				end
 			FIM:
+				begin
+					cts <= 0;
+				end
 				//colocar algo na memoria pro crc começar
 
 endmodule
