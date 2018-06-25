@@ -5,15 +5,17 @@ module	LCD_Inicializacao(
 			Clock,
 			LCD_BLINK,
 			LCD_INCREMENTO,
+			START,
 			LCD_RS,
 			LCD_EN,
 			LCD_RW,
 			LCD_DATA
 	);
 
-	input Clock;
+	input 			Clock;
 	input			LCD_BLINK;
 	input			LCD_INCREMENTO;
+	input 			START;
 
 	output			LCD_RS;
 	output			LCD_EN;
@@ -26,15 +28,16 @@ module	LCD_Inicializacao(
 	reg			blink;
 	reg			incremento;
 
-	reg 		init = 1'b1;
+	reg 		start;
 
 	reg [7:0] data_out;
 	reg [7:0] state;
 	reg [7:0] next;
 	reg [7:0] next1;
 
-	assign LCD_BLINK = blink;
-	assign LCD_INCREMENTO = incremento;
+	assign blink = LCD_BLINK;
+	assign incremento = LCD_INCREMENTO;
+	assign start = START;
 
 	assign LCD_RS = LCD_RS1;
 	assign LCD_EN = LCD_EN1;
@@ -50,21 +53,17 @@ module	LCD_Inicializacao(
 	 				FIM = 8'hff;
 
 	initial begin
-		init = 1;
+		next <= I0;
 	end
 
 	reg [20:0] count;
 
-	always @(posedge Clock)
-		if(init) begin
-			state<=I0;
-			init = 0;
-		end else begin
-			state <= next;
-		end
+	always @(posedge Clock) begin
+		state <= next;
+	end
 
 
-	always @(posedge Clock or state)
+	always @((posedge Clock or state) and posedge start)
 		case(state)
 			I0:	
 				begin
