@@ -46,9 +46,11 @@ module	Rx(
 
 	wire serclock = (contador == velocidade);
 
-	assign DATA_IN = data_in1;
-	assign DATA_OUT = data_ou1;
-	assign CTS = cts;
+	assign data_in1	 = DATA_IN;
+	assign cts = CTS;
+
+	assign DATA_OUT = data_out1;
+	assign RTS = rts;
 	assign ERROPARIDADE = erro_paridade;
 
 	parameter [7:0] START = 8'h00,
@@ -69,7 +71,11 @@ module	Rx(
 		contador <= 16'b0;
 		state => START;
 		next => START;
-		cts <= 1;
+		if(modos_operacao[4]==1) begin
+			cts <=1;
+		end else begin
+			cts <=0;
+		end
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 10416;
 		end else if(modos_de_operacao[7:6]==2'b01) begin
@@ -96,7 +102,7 @@ module	Rx(
 		end
 	end
 
-	always @(posedge Clock and posedge rts)
+	always @(posedge Clock and (posedge rts or ~modo_operacao[4]))
 		case(state)
 			START:	
 				begin
