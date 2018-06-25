@@ -4,7 +4,7 @@ module	Tx(
 			//------------------------------------------------------------------
 			Clock,
 			CTS,
-			START,
+			START_SEND,
 			DATA_OUT,
 			RTS
 	);
@@ -12,7 +12,7 @@ module	Tx(
 
 	input 			Clock;
 	input 			CTS;
-	input 			START;
+	input 			START_SEND;
 
 	output			DATA_OUT;
 	output      	RTS;
@@ -23,15 +23,19 @@ module	Tx(
 	reg erro_paridade;
 	reg data_out1;
 	reg rts;
+	reg cts;
 	reg enable = 1'b0;
 	reg [3:0] paridade;
-	reg [7:0] data = 8'h1;
+	reg [7:0] data = 8'b01100001;
 	reg [7:0] state;
 	reg [7:0] next;
 	reg [15:0] qtd_pacotes = 16'h1;
 
+
+	assign start = START_SEND;
+	assign cts = CTS;
+	
 	assign DATA_OUT = data_out1;
-	assign START = start;
 	assign RTS = rts;
 
 	reg [15:0] velocidade;
@@ -55,7 +59,13 @@ module	Tx(
 		contador <= 16'b0;
 		state => START;
 		next => START;
-		rts <=1;
+
+		if(modos_operacao[4]==1) begin
+			rts <=1;
+		end else begin
+			rts <=0;
+		end
+		
 		if(modos_de_operacao[7:6]==2'b00) begin
 			velocidade = 10416;
 		end else if(modos_de_operacao[7:6]==2'b01) begin
@@ -67,8 +77,6 @@ module	Tx(
 		end 
 	end
 
-
-	assign LCD_DATA = data_out;
 
 	always @(posedge Clock) begin
 		if(enable) begin
@@ -87,7 +95,7 @@ module	Tx(
 
 	wire serclock = (contador == velocidade);
 
-	always @(posedge Clock and posedge cts)
+	always @(posedge Clock and (posedge cts or ~modo_operacao[4]))
 		case(state)
 			START:	
 				begin
