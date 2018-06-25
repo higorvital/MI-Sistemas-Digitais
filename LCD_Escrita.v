@@ -1,15 +1,18 @@
-	module	LCD_Escrita(
+		module	LCD_Escrita(
 				//------------------------------------------------------------------
 				//	Clock & Reset Inputs
 				//------------------------------------------------------------------
 				Clock,
+				START,
 				LCD_RS,
 				LCD_EN,
 				LCD_RW,
 				LCD_DATA
 		);
 
-		input Clock;
+		input 			Clock;
+		input 			START;
+
 		output			LCD_RS;
 		output			LCD_EN;
 		output			LCD_RW;
@@ -21,7 +24,9 @@
 		reg			LCD_RS1;
 		reg			LCD_EN1;
 		reg			LCD_RW1;
+		reg 		start;
 
+		assign start = START;
 
 		assign LCD_RS = LCD_RS1;
 		assign LCD_EN = LCD_EN1;
@@ -48,21 +53,16 @@
 		 				ESPACO = 8'hfe,
 		 				FIM = 8'hff;
 
-		reg init = 1'b1;
 		reg [4:0] i = 5'b0;
 
 		initial begin
 			i = 0;
+			next <= D0;
 		end
 
-		always @(posedge Clock)
-			if(init) begin
-				state<=D0;
-				init <= 1'b0;
-			end else begin
-				state <= next;
-			end
-
+		always @(posedge Clock) begin
+			state <= next;
+		end
 
 
 		wire [7:0] foo [0:15];
@@ -91,7 +91,7 @@
 		assign foo2[4] = " ";
 
 
-		always @(state)
+		always @(state and posedge start)
 			case(state)
 				D0:	
 					begin	
