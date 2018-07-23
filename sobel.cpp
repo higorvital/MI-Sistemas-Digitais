@@ -62,24 +62,9 @@ int main( int argc, char** argv )
 
   int x = 0;
   int y = 0;
-  Mat saida  = grad;
   for(x = 0;x < grad.cols;x++){
       for(y = 0;y < grad.rows;y++){
           Vec3b intensidade = grad.at<Vec3b>(y,x);
-
-          int a = (intensidade[0]+intensidade[1]+intensidade[2])/3;
-          Vec3b novo;
-          if(a<=50){
-              novo[0] = 0;
-              novo[1] = 0;
-              novo[2] = 0;
-              saida.at<Vec3b>(y,x) = novo;
-          }else{
-              novo[0] = 255;
-              novo[1] = 255;
-              novo[2] = 255;
-              saida.at<Vec3b>(y,x) = novo;
-          }
 
           printf("%d|%d|%d ",intensidade.val[0],intensidade.val[1],intensidade.val[2]);
           //printf("%d ",intensidade.val);
@@ -87,11 +72,10 @@ int main( int argc, char** argv )
     printf("\n");
   }
 
-  imwrite("C:/Users/hells/Pictures/lejhjk.png", saida);
-
-  imshow( window_name, saida );
+  imshow( window_name, grad );
 
   waitKey(0);
 
   return 0;
   }
+
