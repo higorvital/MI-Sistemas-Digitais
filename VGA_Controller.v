@@ -1,4 +1,4 @@
-module FPGA_TOP_MIV(
+module VGA_Controller(
     input clock_50MHz,
     output [3:0] VGA_R,
     output [3:0] VGA_G,
